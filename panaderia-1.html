@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panadería · Pedidos</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#FAF6EF;--wheat:#E8D9B8;--crust:#B5722A;--dark:#2A1F0E;
+  --mid:#7A5C2E;--soft:#F3EAD8;--border:#DDD0B3;--green:#3A7D52;
+  --red:#C0392B;--shadow:0 2px 14px rgba(42,31,14,.10);
+}
+body{background:var(--cream);font-family:'Inter',sans-serif;color:var(--dark);min-height:100vh;}
+
+header{background:var(--dark);padding:1rem 1.4rem;display:flex;align-items:center;gap:.8rem;}
+.logo{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--wheat);}
+.logo em{color:var(--crust);font-style:normal;}
+.hdate{margin-left:auto;font-size:.72rem;color:var(--wheat);opacity:.5;text-transform:uppercase;letter-spacing:.07em;}
+
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--border);padding:0 1rem;overflow-x:auto;}
+.tab{padding:.8rem 1rem;font-size:.85rem;font-weight:600;color:var(--mid);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color .2s,border-color .2s;user-select:none;}
+.tab.active{color:var(--crust);border-color:var(--crust);}
+
+.view{display:none;padding:1rem;max-width:860px;margin:0 auto;}
+.view.active{display:block;}
+
+/* ORDER FORM */
+.name-box{background:#fff;border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:1rem;box-shadow:var(--shadow);}
+.name-box label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--crust);display:block;margin-bottom:.4rem;}
+.name-box input{width:100%;padding:.65rem 1rem;border:1.5px solid var(--border);border-radius:8px;font-size:.95rem;background:var(--soft);color:var(--dark);outline:none;transition:border-color .2s;}
+.name-box input:focus{border-color:var(--crust);background:#fff;}
+
+.section-card{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:.8rem;box-shadow:var(--shadow);overflow:hidden;}
+.section-head{background:var(--dark);color:var(--wheat);padding:.55rem 1rem;font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+.section-head.masa-dura{background:#5C3D1E;}
+.section-head.masa-blanda{background:#2E5C3E;}
+.section-head.moreno{background:#3D3D3D;}
+.section-head.integral{background:#4A5C2E;}
+
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0;border-top:1px solid var(--border);}
+.prod-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem .8rem;border-bottom:1px solid var(--border);border-right:1px solid var(--border);}
+.prod-row:nth-last-child(-n+2){border-bottom:none;}
+.prod-label{font-size:.8rem;font-weight:600;color:var(--dark);flex:1;line-height:1.2;}
+.qty-row{display:flex;align-items:center;gap:.3rem;flex-shrink:0;}
+.qty-btn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);background:var(--soft);font-size:1rem;font-weight:700;color:var(--mid);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s;user-select:none;}
+.qty-btn:hover{background:var(--crust);border-color:var(--crust);color:#fff;}
+.qty-val{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--crust);min-width:24px;text-align:center;}
+.prod-row.has-qty{background:#FFF8F0;}
+
+.btn-confirm{width:100%;padding:.85rem;background:var(--crust);color:#fff;border:none;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer;margin-top:.5rem;transition:opacity .2s;}
+.btn-confirm:hover{opacity:.88;}
+.btn-confirm:disabled{opacity:.4;cursor:not-allowed;}
+
+.toast{margin-top:.7rem;padding:.65rem 1rem;border-radius:8px;font-size:.83rem;display:none;}
+.toast.ok{background:#EAF4EE;color:var(--green);border:1px solid #B6D9C2;display:block;}
+.toast.err{background:#FDEDEC;color:var(--red);border:1px solid #F1B8B3;display:block;}
+.toast.loading{background:var(--soft);color:var(--mid);border:1px solid var(--border);display:block;}
+
+/* SUMMARY */
+.summary-section{background:#fff;border:1px solid var(--border);border-radius:12px;margin-bottom:.8rem;box-shadow:var(--shadow);overflow:hidden;}
+.summary-head{padding:.55rem 1rem;font-size:.8rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;}
+.summary-head.masa-dura{background:#5C3D1E;}
+.summary-head.masa-blanda{background:#2E5C3E;}
+.summary-head.moreno{background:#3D3D3D;}
+.summary-head.integral{background:#4A5C2E;}
+
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;}
+.summary-row{display:flex;align-items:center;justify-content:space-between;padding:.45rem .9rem;border-bottom:1px solid var(--border);border-right:1px solid var(--border);}
+.summary-row:nth-last-child(-n+2){border-bottom:none;}
+.sum-label{font-size:.8rem;font-weight:600;color:var(--dark);}
+.sum-qty{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;color:var(--crust);}
+.sum-qty.zero{color:#ccc;}
+
+/* ORDERS LIST */
+.order-card{background:#fff;border:1px solid var(--border);border-radius:11px;padding:.85rem 1rem;margin-bottom:.7rem;box-shadow:var(--shadow);position:relative;}
+.order-client{font-weight:700;font-size:.92rem;color:var(--dark);margin-bottom:.4rem;}
+.order-items{display:flex;flex-wrap:wrap;gap:.3rem;}
+.order-chip{background:var(--soft);border:1px solid var(--border);border-radius:5px;padding:.15rem .5rem;font-size:.77rem;color:var(--mid);}
+.order-time{font-size:.68rem;color:#bbb;margin-top:.35rem;}
+.order-del{position:absolute;top:.7rem;right:.7rem;background:none;border:none;font-size:.9rem;cursor:pointer;color:#ccc;}
+.order-del:hover{color:var(--red);}
+
+.sec-title{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--dark);margin-bottom:.8rem;display:flex;align-items:center;justify-content:space-between;}
+.clear-btn{background:none;border:1.5px solid var(--border);color:var(--mid);border-radius:7px;padding:.35rem .8rem;font-size:.78rem;cursor:pointer;}
+.clear-btn:hover{border-color:var(--red);color:var(--red);}
+.empty-msg{text-align:center;color:#bbb;font-size:.85rem;padding:1.8rem 0;}
+.badge-green{display:inline-flex;align-items:center;gap:.4rem;background:#E8F5E9;border:1px solid #A5D6A7;border-radius:6px;padding:.3rem .7rem;font-size:.73rem;color:#2E7D32;font-weight:600;margin-bottom:.9rem;}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🍞 Mi <em>Panadería</em></div>
+  <div class="hdate" id="hdate"></div>
+</header>
+<div class="tabs">
+  <div class="tab active" onclick="showTab('order')">📋 Nuevo pedido</div>
+  <div class="tab" onclick="showTab('summary')">🏭 Resumen total</div>
+  <div class="tab" onclick="showTab('orders')">👤 Por cliente</div>
+</div>
+
+<!-- NUEVO PEDIDO -->
+<div class="view active" id="view-order">
+  <div class="badge-green">🟢 Conectado a Google Sheets</div>
+  <div class="name-box">
+    <label>Nombre del cliente</label>
+    <input type="text" id="clientName" placeholder="Escribe el nombre…" maxlength="60">
+  </div>
+  <div id="catalogContainer"></div>
+  <button class="btn-confirm" id="confirmBtn" onclick="confirmOrder()">Enviar pedido ☁️</button>
+  <div class="toast" id="toast"></div>
+</div>
+
+<!-- RESUMEN TOTAL -->
+<div class="view" id="view-summary">
+  <div id="summaryContainer"><div class="empty-msg">Sin pedidos aún.</div></div>
+</div>
+
+<!-- POR CLIENTE -->
+<div class="view" id="view-orders">
+  <div class="sec-title">
+    <span>Pedidos individuales</span>
+    <button class="clear-btn" onclick="clearAll()">Borrar todo</button>
+  </div>
+  <div id="ordersList"><div class="empty-msg">Sin pedidos aún.</div></div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzCdoPTycYYVMsL5fZAhzIwWFzzYvfLrp5T2C9qa8I9RVlnF-ArYTwOH4hp2yilMGxc/exec';
+const K_ORDERS = 'pan_orders_v4';
+
+// ── CATÁLOGO COMPLETO POR SECCIONES ──────────────────────
+const CATALOG = [
+  {
+    id: 'masa_dura', label: '1ª Masa Dura', cls: 'masa-dura',
+    products: [
+      'Kilos de Barra','Kilos de Boba','Kilos de Pico','Kilos de Piña',
+      'Medios Chatos','Medios de Bobas','Medios de Pico','Medios de Piña',
+      'Medios de Tabla','Medios Moreno','Medios Integrales','Medios Rústico','Medios Payés',
+      'Cuartos Chato','Cuartos de Boba','Cuartos de Pico','Cuartos de Piña',
+      'Cuartos de Tabla','Cuartos de Roscas','Cuarto Cundi de Pico','Cuarto Integ.','Cuartos Rústico','Cuartos Payés',
+      'Cundi 350g','Bollos Masa Dura','Bollos Piñita 100g',
+    ]
+  },
+  {
+    id: 'masa_blanda', label: 'Masa Blanda', cls: 'masa-blanda',
+    products: [
+      'Barras','Barras de Viena','Barra de Manteca','Barritas',
+      'Bollos Salchicha','Bollos Viena','Bollos de Masa Dura','Bollos de Piñas','Bollos Los Lagos',
+      'Medias Baguettes','Medias Barritas',
+      'Molletes Marinados Rústicos','Molletes Cocidos','Molletes Blancos','Molletes Integrales','Molletes Rústicos',
+      'Minis Hamburguesas','Minis Cocidos','Minis Blancos','Minis Integrales','Minis Int. Blandos','Minis Piñitas','Minis Masa Dura','Minis Carros','Minis Red.',
+      'Bollitos Piñitas (unidad)','Bollitos Masa Dura','Bollitos Gallegos',
+      'Pitufos','Pitufos Terraza','Pitufos Rústico',
+      'Montaditos Largos','Montaditos Redondos','Montaditos Integrales',
+      'Terraza Blancos','Terraza Integrales',
+    ]
+  },
+  {
+    id: 'moreno', label: 'Pan Moreno', cls: 'moreno',
+    products: [
+      'Kilos Morenos','Medios Morenos','Tres Kilos Moreno',
+    ]
+  },
+  {
+    id: 'integral', label: 'Pan Integral', cls: 'integral',
+    products: [
+      'Kilos Integral','Kilos Largos Integral','Kilos Redondo Integral',
+      'Medios Integrales Boba','Medios Redondos Integral','Medios Largos Integral',
+      'Cuartos Redondos Integral','Molde 1 Kilo Blanco',
+      'Minis Integrales Blandos',
+    ]
+  },
+];
+
+let orders = [];
+let selection = {};
+
+function load() {
+  try { orders = JSON.parse(localStorage.getItem(K_ORDERS)) || []; } catch { orders = []; }
+}
+function save() { localStorage.setItem(K_ORDERS, JSON.stringify(orders)); }
+
+function showTab(tab) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + tab).classList.add('active');
+  const idx = ['order','summary','orders'].indexOf(tab);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  if (tab === 'summary') renderSummary();
+  if (tab === 'orders')  renderOrders();
+}
+
+// ── RENDER CATALOG ────────────────────────────────────────
+function renderCatalog() {
+  selection = {};
+  const el = document.getElementById('catalogContainer');
+  el.innerHTML = CATALOG.map(sec => `
+    <div class="section-card">
+      <div class="section-head ${sec.cls}">${sec.label}</div>
+      <div class="products-grid">
+        ${sec.products.map(p => {
+          const id = p.replace(/\s+/g,'_').replace(/[^\w]/g,'');
+          return `
+          <div class="prod-row" id="row-${id}">
+            <span class="prod-label">${esc(p)}</span>
+            <div class="qty-row">
+              <button class="qty-btn" onclick="changeQty('${id}',-1)">−</button>
+              <div class="qty-val" id="qty-${id}">0</div>
+              <button class="qty-btn" onclick="changeQty('${id}',1)">+</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function changeQty(id, delta) {
+  selection[id] = Math.max(0, (selection[id] || 0) + delta);
+  document.getElementById('qty-' + id).textContent = selection[id];
+  document.getElementById('row-' + id).classList.toggle('has-qty', selection[id] > 0);
+}
+
+// ── CONFIRM ORDER ─────────────────────────────────────────
+async function confirmOrder() {
+  const name = document.getElementById('clientName').value.trim();
+  if (!name) { alert('Escribe el nombre del cliente.'); return; }
+
+  const items = [];
+  CATALOG.forEach(sec => {
+    sec.products.forEach(p => {
+      const id = p.replace(/\s+/g,'_').replace(/[^\w]/g,'');
+      if (selection[id] > 0) items.push({ name: p, qty: selection[id], section: sec.label });
+    });
+  });
+
+  if (!items.length) { alert('Selecciona al menos un producto.'); return; }
+
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true;
+  showToast('⏳ Enviando pedido…','loading');
+
+  const order = {
+    id: Date.now(), client: name, items,
+    time: new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})
+  };
+  orders.push(order);
+  save();
+
+  try {
+    await fetch(SCRIPT_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ client: name, items })
+    });
+    showToast(`✅ Pedido de ${name} enviado correctamente.`,'ok');
+  } catch {
+    showToast('⚠️ Guardado localmente (sin conexión).','ok');
+  }
+
+  document.getElementById('clientName').value = '';
+  renderCatalog();
+  btn.disabled = false;
+  setTimeout(() => { document.getElementById('toast').className = 'toast'; }, 4000);
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+}
+
+// ── RENDER SUMMARY ────────────────────────────────────────
+function renderSummary() {
+  const el = document.getElementById('summaryContainer');
+  if (!orders.length) { el.innerHTML = '<div class="empty-msg">Sin pedidos aún.</div>'; return; }
+
+  // Aggregate totals
+  const totals = {};
+  orders.forEach(o => o.items.forEach(it => {
+    totals[it.name] = (totals[it.name] || 0) + it.qty;
+  }));
+
+  el.innerHTML = CATALOG.map(sec => {
+    const rows = sec.products.map(p => {
+      const qty = totals[p] || 0;
+      return `<div class="summary-row">
+        <span class="sum-label">${esc(p)}</span>
+        <span class="sum-qty ${qty===0?'zero':''}">${qty}</span>
+      </div>`;
+    }).join('');
+    return `
+      <div class="summary-section">
+        <div class="summary-head ${sec.cls}">${sec.label}</div>
+        <div class="summary-grid">${rows}</div>
+      </div>`;
+  }).join('');
+}
+
+// ── RENDER ORDERS ─────────────────────────────────────────
+function renderOrders() {
+  const el = document.getElementById('ordersList');
+  el.innerHTML = orders.length ? [...orders].reverse().map(o => `
+    <div class="order-card">
+      <div class="order-client">👤 ${esc(o.client)}</div>
+      <div class="order-items">
+        ${o.items.map(it=>`<span class="order-chip">${it.qty} ${esc(it.name)}</span>`).join('')}
+      </div>
+      <div class="order-time">🕐 ${o.time}</div>
+      <button class="order-del" onclick="deleteOrder(${o.id})">✕</button>
+    </div>
+  `).join('') : '<div class="empty-msg">Sin pedidos aún.</div>';
+}
+
+function deleteOrder(id) {
+  orders = orders.filter(o => o.id !== id);
+  save(); renderOrders();
+}
+
+function clearAll() {
+  if (!confirm('¿Borrar todos los pedidos del día?')) return;
+  orders = []; save(); renderOrders();
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('hdate').textContent =
+    new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+  load();
+  renderCatalog();
+});
+</script>
+</body>
+</html>
