@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panadería · Pedidos</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#FAF6EF;--wheat:#E8D9B8;--crust:#B5722A;--dark:#2A1F0E;
+  --mid:#7A5C2E;--soft:#F3EAD8;--border:#DDD0B3;--green:#3A7D52;
+  --red:#C0392B;--shadow:0 2px 10px rgba(42,31,14,.09);--blue:#2563EB;
+}
+body{background:var(--cream);font-family:'Inter',sans-serif;color:var(--dark);min-height:100vh;}
+header{background:var(--dark);padding:.9rem 1.2rem;display:flex;align-items:center;gap:.8rem;}
+.logo{font-family:'Playfair Display',serif;font-size:1.35rem;color:var(--wheat);}
+.logo em{color:var(--crust);font-style:normal;}
+.hdate{margin-left:auto;font-size:.7rem;color:var(--wheat);opacity:.5;text-transform:uppercase;letter-spacing:.07em;}
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--border);overflow-x:auto;}
+.tab{padding:.75rem 1rem;font-size:.83rem;font-weight:600;color:var(--mid);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color .2s,border-color .2s;user-select:none;}
+.tab.active{color:var(--crust);border-color:var(--crust);}
+.view{display:none;padding:.9rem;max-width:860px;margin:0 auto;}
+.view.active{display:block;}
+
+/* NAME */
+.name-box{background:#fff;border:1px solid var(--border);border-radius:11px;padding:.9rem;margin-bottom:.9rem;box-shadow:var(--shadow);}
+.name-box label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--crust);display:block;margin-bottom:.35rem;}
+.name-row{display:flex;gap:.5rem;align-items:center;}
+.name-row input{flex:1;padding:.6rem .9rem;border:1.5px solid var(--border);border-radius:7px;font-size:.93rem;background:var(--soft);color:var(--dark);outline:none;transition:border-color .2s;}
+.name-row input:focus{border-color:var(--crust);background:#fff;}
+
+/* FIXED BANNER */
+.fixed-banner{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:9px;padding:.7rem .9rem;margin-bottom:.8rem;display:none;align-items:center;justify-content:space-between;gap:.5rem;}
+.fixed-banner.show{display:flex;}
+.fixed-banner span{font-size:.8rem;color:var(--blue);font-weight:600;}
+.btn-apply{padding:.4rem .8rem;background:var(--blue);color:#fff;border:none;border-radius:6px;font-size:.76rem;font-weight:700;cursor:pointer;}
+
+/* MODAL */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:100;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:500px;padding:1.2rem;max-height:70vh;overflow-y:auto;}
+.modal-title{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--dark);margin-bottom:.9rem;}
+.modal-list{display:flex;flex-direction:column;gap:.5rem;}
+.modal-item{background:var(--soft);border:1.5px solid var(--border);border-radius:9px;padding:.75rem 1rem;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:border-color .15s,background .15s;}
+.modal-item:hover{border-color:var(--blue);background:#EFF6FF;}
+.modal-item-name{font-weight:700;font-size:.92rem;color:var(--dark);}
+.modal-item-count{font-size:.74rem;color:var(--mid);}
+.modal-close{width:100%;padding:.7rem;background:none;border:1.5px solid var(--border);border-radius:9px;color:var(--mid);font-size:.88rem;font-weight:600;cursor:pointer;margin-top:.8rem;}
+.modal-close:hover{border-color:var(--red);color:var(--red);}
+.modal-empty{text-align:center;color:#bbb;font-size:.85rem;padding:1rem 0;}
+
+/* CATALOG */
+.section-card{background:#fff;border:1px solid var(--border);border-radius:11px;margin-bottom:.75rem;box-shadow:var(--shadow);overflow:hidden;}
+.section-head{padding:.5rem 1rem;font-size:.78rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#fff;}
+.s1{background:#6B3A1F;}.s2{background:#2E5C3E;}.s3{background:#3D3424;}.s4{background:#3A5C1F;}
+.prod-grid{display:grid;grid-template-columns:1fr 1fr;}
+.prod-row{display:flex;align-items:center;justify-content:space-between;padding:.4rem .7rem;border-bottom:1px solid var(--border);border-right:1px solid var(--border);}
+.prod-row.has-qty{background:#FFF6EC;}
+.prod-label{font-size:.78rem;font-weight:600;color:var(--dark);flex:1;line-height:1.25;padding-right:.4rem;}
+.qty-ctrl{display:flex;align-items:center;gap:.2rem;flex-shrink:0;}
+.qb{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);background:var(--soft);font-size:.95rem;font-weight:700;color:var(--mid);cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;transition:background .15s,color .15s;flex-shrink:0;}
+.qb:hover{background:var(--crust);border-color:var(--crust);color:#fff;}
+.qty-input{width:42px;height:28px;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--crust);background:var(--soft);outline:none;padding:0;}
+.qty-input:focus{border-color:var(--crust);background:#fff;}
+.qty-input.has-val{background:#FFF6EC;border-color:var(--crust);}
+
+/* BUTTONS */
+.btn-ok{width:100%;padding:.8rem;background:var(--crust);color:#fff;border:none;border-radius:9px;font-size:.92rem;font-weight:700;cursor:pointer;margin-top:.4rem;transition:opacity .2s;}
+.btn-ok:hover{opacity:.88;}
+.btn-ok:disabled{opacity:.4;cursor:not-allowed;}
+.btn-row{display:flex;gap:.5rem;margin-top:.5rem;}
+.btn-secondary{flex:1;padding:.7rem;background:#fff;color:var(--green);border:2px solid var(--green);border-radius:9px;font-size:.82rem;font-weight:700;cursor:pointer;}
+.btn-secondary:hover{background:#EAF4EE;}
+
+.toast{margin-top:.6rem;padding:.6rem .9rem;border-radius:7px;font-size:.81rem;display:none;}
+.toast.ok{background:#EAF4EE;color:var(--green);border:1px solid #B6D9C2;display:block;}
+.toast.err{background:#FDEDEC;color:var(--red);border:1px solid #F1B8B3;display:block;}
+.toast.loading{background:var(--soft);color:var(--mid);border:1px solid var(--border);display:block;}
+
+/* SUMMARY */
+.sum-section{background:#fff;border:1px solid var(--border);border-radius:11px;margin-bottom:.75rem;box-shadow:var(--shadow);overflow:hidden;}
+.sum-head{padding:.5rem 1rem;font-size:.78rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#fff;}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;}
+.sum-row{display:flex;align-items:center;justify-content:space-between;padding:.4rem .75rem;border-bottom:1px solid var(--border);border-right:1px solid var(--border);}
+.sum-name{font-size:.78rem;font-weight:600;color:var(--dark);}
+.sum-qty{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:900;color:var(--crust);}
+.sum-qty.zero{color:#ddd;}
+
+/* RESET */
+.reset-box{background:#fff;border:1px solid var(--border);border-radius:11px;padding:1rem;margin-bottom:1rem;box-shadow:var(--shadow);text-align:center;}
+.reset-box p{font-size:.82rem;color:var(--mid);margin-bottom:.7rem;line-height:1.5;}
+.btn-reset{padding:.7rem 1.4rem;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:.88rem;font-weight:700;cursor:pointer;}
+.btn-reset:hover{opacity:.85;}
+.day-info{font-size:.75rem;color:#aaa;margin-top:.5rem;}
+
+/* ORDERS */
+.order-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:.8rem .95rem;margin-bottom:.65rem;box-shadow:var(--shadow);position:relative;}
+.order-client{font-weight:700;font-size:.9rem;color:var(--dark);margin-bottom:.38rem;}
+.order-chips{display:flex;flex-wrap:wrap;gap:.28rem;}
+.chip{background:var(--soft);border:1px solid var(--border);border-radius:5px;padding:.13rem .45rem;font-size:.74rem;color:var(--mid);}
+.order-time{font-size:.66rem;color:#bbb;margin-top:.32rem;}
+.odel{position:absolute;top:.65rem;right:.65rem;background:none;border:none;font-size:.88rem;cursor:pointer;color:#ccc;}
+.odel:hover{color:var(--red);}
+.sec-hdr{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--dark);margin-bottom:.75rem;display:flex;align-items:center;justify-content:space-between;}
+.clr-btn{background:none;border:1.5px solid var(--border);color:var(--mid);border-radius:7px;padding:.3rem .75rem;font-size:.76rem;cursor:pointer;}
+.clr-btn:hover{border-color:var(--red);color:var(--red);}
+.empty{text-align:center;color:#bbb;font-size:.83rem;padding:1.6rem 0;}
+.badge{display:inline-flex;align-items:center;gap:.35rem;background:#E8F5E9;border:1px solid #A5D6A7;border-radius:5px;padding:.25rem .6rem;font-size:.71rem;color:#2E7D32;font-weight:600;margin-bottom:.8rem;}
+.hint{font-size:.73rem;color:var(--mid);margin-bottom:.8rem;line-height:1.5;}
+
+/* FIXED LIST */
+.fixed-list{margin-top:1rem;}
+.fixed-title{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--dark);margin-bottom:.6rem;}
+.fixed-card{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:9px;padding:.7rem .9rem;margin-bottom:.5rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem;}
+.fixed-name{font-weight:700;font-size:.88rem;color:var(--dark);}
+.fixed-del{background:none;border:none;color:#93C5FD;cursor:pointer;font-size:.85rem;}
+.fixed-del:hover{color:var(--red);}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🍞 Mi <em>Panadería</em></div>
+  <div class="hdate" id="hdate"></div>
+</header>
+<div class="tabs">
+  <div class="tab active" onclick="showTab('order')">📋 Nuevo pedido</div>
+  <div class="tab" onclick="showTab('summary')">🏭 Resumen total</div>
+  <div class="tab" onclick="showTab('orders')">👤 Por cliente</div>
+  <div class="tab" onclick="showTab('reset')">🔄 Resetear</div>
+</div>
+
+<!-- MODAL PEDIDOS FIJOS -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title">📋 Pedidos fijos guardados</div>
+    <div class="modal-list" id="modalList"></div>
+    <button class="modal-close" onclick="closeModalDirect()">Cerrar</button>
+  </div>
+</div>
+
+<!-- NUEVO PEDIDO -->
+<div class="view active" id="view-order">
+  <div class="badge">🟢 Conectado a Google Sheets</div>
+  <div class="name-box">
+    <label>Nombre del cliente</label>
+    <div class="name-row">
+      <input type="text" id="clientName" placeholder="Escribe el nombre…" maxlength="60" oninput="checkFixed()">
+    </div>
+  </div>
+  <div class="fixed-banner" id="fixedBanner">
+    <span id="fixedBannerText"></span>
+    <button class="btn-apply" onclick="applyFixed()">⚡ Cargar pedido fijo</button>
+  </div>
+  <div class="hint">Pulsa − + para cantidades pequeñas, o escribe directamente el número.</div>
+  <div id="catalogContainer"></div>
+  <button class="btn-ok" id="confirmBtn" onclick="confirmOrder()">Enviar pedido ☁️</button>
+  <div class="btn-row">
+    <button class="btn-secondary" onclick="saveFixed()">💾 Guardar como pedido fijo</button>
+    <button class="btn-secondary" style="color:var(--blue);border-color:var(--blue);" onclick="openModal()">📋 Ver pedidos fijos</button>
+  </div>
+  <div class="toast" id="toast"></div>
+</div>
+
+<!-- RESUMEN TOTAL -->
+<div class="view" id="view-summary">
+  <div id="summaryContainer"><div class="empty">Sin pedidos aún.</div></div>
+</div>
+
+<!-- POR CLIENTE -->
+<div class="view" id="view-orders">
+  <div class="sec-hdr">
+    <span>Pedidos individuales</span>
+    <button class="clr-btn" onclick="clearAll()">Borrar todo</button>
+  </div>
+  <div id="ordersList"><div class="empty">Sin pedidos aún.</div></div>
+</div>
+
+<!-- RESETEAR -->
+<div class="view" id="view-reset">
+  <div class="reset-box">
+    <p>🗓 Usa este botón al <strong>inicio de cada día</strong> para borrar todos los pedidos y empezar de cero.<br>Los <strong>pedidos fijos</strong> no se borran nunca.</p>
+    <button class="btn-reset" onclick="resetDay()">🗑 Resetear pedidos del día</button>
+    <div class="day-info" id="dayInfo"></div>
+  </div>
+  <div class="fixed-list">
+    <div class="fixed-title">📋 Pedidos fijos guardados</div>
+    <div id="fixedList"><div class="empty">No hay pedidos fijos guardados.</div></div>
+  </div>
+</div>
+
+<script>
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzCdoPTycYYVMsL5fZAhzIwWFzzYvfLrp5T2C9qa8I9RVlnF-ArYTwOH4hp2yilMGxc/exec';
+const K_ORDERS = 'pan_orders_v8';
+const K_FIXED  = 'pan_fixed_v8';
+const K_DATE   = 'pan_date_v8';
+
+const CATALOG = [
+  { id:'s1', label:'Masa Dura', cls:'s1', products:[
+    'Kilos Blancos','Kilos Blancos Cortado',
+    'Medios Blancos','Medios Blancos Cortado',
+    'Cuartos Blancos','Cuartos Blancos Cortado',
+    'Kilos Boba','Kilos Boba Cortado',
+    'Medios Boba','Medios Boba Cortado',
+    'Cuartos Boba','Cuartos Boba Cortado',
+    'Medios Piña','Medios Tabla',
+    'Cuartos Piña','Cuartos Tabla',
+    'Bollos Masa Dura','Bollos Piña',
+    'Bollitos Masa Dura','Bollitos Piña',
+  ]},
+  { id:'s2', label:'Masa Viena', cls:'s2', products:[
+    'Barras','Barra Manteca','Barras Rústica',
+    'Medias Barritas','Medias Barritas Rústica',
+    'Kilos Rústico','Medios Rústico','Cuartos Rústico',
+    'Bollitos Rústico','Molletes Rústico',
+    'Bollos Viena','Mini Cocido','Pitufos','Salchichas',
+    'Mini Blanco','Molletes Blancos','Molletes Cocidos',
+    'Terraza Blanco','Montadito','Montadito Redondo','Hamburguesa','Estrellitas',
+  ]},
+  { id:'s3', label:'Moreno', cls:'s3', products:[
+    'Telera 3 Kilos Moreno','Telera 3 Kilos Moreno Cortado',
+    'Telera 2 Kilos Moreno','Telera 2 Kilos Moreno Cortado',
+    'Kilos Morenos','Kilos Morenos Cortado',
+    'Medios Morenos','Medios Morenos Cortado',
+  ]},
+  { id:'s4', label:'Integral', cls:'s4', products:[
+    'Kilos Int.','Kilos Int. Cortado',
+    'Medios Int.','Medios Int. Cortado',
+    'Cuartos Int.','Cuartos Int. Cortado',
+    'Medias Barritas Int.','Bollos Int.','Minis Int.',
+    'Minis Blando Int.','Molletes Integrales','Terraza Int.',
+  ]},
+];
+
+let orders = [];
+let fixedOrders = {};
+let sel = {};
+
+function load(){
+  try{ orders=JSON.parse(localStorage.getItem(K_ORDERS))||[]; }catch{ orders=[]; }
+  try{ fixedOrders=JSON.parse(localStorage.getItem(K_FIXED))||{}; }catch{ fixedOrders={}; }
+  const today=new Date().toDateString();
+  const lastDate=localStorage.getItem(K_DATE);
+  if(lastDate && lastDate!==today){ orders=[]; localStorage.setItem(K_ORDERS,JSON.stringify(orders)); }
+  localStorage.setItem(K_DATE,today);
+}
+
+function saveOrders(){ localStorage.setItem(K_ORDERS,JSON.stringify(orders)); }
+
+function showTab(t){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+t).classList.add('active');
+  ['order','summary','orders','reset'].forEach((n,i)=>{ if(n===t) document.querySelectorAll('.tab')[i].classList.add('active'); });
+  if(t==='summary') renderSummary();
+  if(t==='orders') renderOrders();
+  if(t==='reset') renderReset();
+}
+
+function pid(p){ return 'p_'+p.replace(/[^a-zA-Z0-9]/g,'_'); }
+
+function renderCatalog(){
+  sel={};
+  document.getElementById('catalogContainer').innerHTML = CATALOG.map(sec=>`
+    <div class="section-card">
+      <div class="section-head ${sec.cls}">${sec.label}</div>
+      <div class="prod-grid">
+        ${sec.products.map(p=>{
+          const id=pid(p);
+          return `<div class="prod-row" id="row-${id}">
+            <span class="prod-label">${esc(p)}</span>
+            <div class="qty-ctrl">
+              <button class="qb" onclick="cq('${id}',-1)">−</button>
+              <input class="qty-input" id="qi-${id}" type="number" min="0" value="" placeholder="0"
+                oninput="setQ('${id}',this.value)">
+              <button class="qb" onclick="cq('${id}',1)">+</button>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function setQ(id,val){
+  const n=Math.max(0,parseInt(val)||0);
+  sel[id]=n;
+  const inp=document.getElementById('qi-'+id);
+  if(inp) inp.classList.toggle('has-val',n>0);
+  document.getElementById('row-'+id).classList.toggle('has-qty',n>0);
+}
+
+function cq(id,d){
+  const n=Math.max(0,(sel[id]||0)+d);
+  sel[id]=n;
+  const inp=document.getElementById('qi-'+id);
+  if(inp){inp.value=n>0?n:'';inp.classList.toggle('has-val',n>0);}
+  document.getElementById('row-'+id).classList.toggle('has-qty',n>0);
+}
+
+function getItems(){
+  const items=[];
+  CATALOG.forEach(sec=>sec.products.forEach(p=>{
+    const id=pid(p);
+    if((sel[id]||0)>0) items.push({name:p,qty:sel[id],section:sec.label});
+  }));
+  return items;
+}
+
+function checkFixed(){
+  const name=document.getElementById('clientName').value.trim();
+  const banner=document.getElementById('fixedBanner');
+  if(name && fixedOrders[name]){
+    document.getElementById('fixedBannerText').textContent=`📋 ${name} tiene pedido fijo guardado`;
+    banner.classList.add('show');
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+function applyFixed(){
+  const name=document.getElementById('clientName').value.trim();
+  if(!name||!fixedOrders[name]) return;
+  renderCatalog();
+  fixedOrders[name].forEach(it=>{
+    const id=pid(it.name);
+    sel[id]=it.qty;
+    const inp=document.getElementById('qi-'+id);
+    if(inp){inp.value=it.qty;inp.classList.add('has-val');}
+    const row=document.getElementById('row-'+id);
+    if(row) row.classList.add('has-qty');
+  });
+  showToast(`✅ Pedido fijo de ${name} cargado.`,'ok');
+  setTimeout(()=>{ document.getElementById('toast').className='toast'; },3000);
+}
+
+// MODAL
+function openModal(){
+  const names=Object.keys(fixedOrders);
+  const el=document.getElementById('modalList');
+  if(!names.length){
+    el.innerHTML='<div class="modal-empty">No hay pedidos fijos guardados aún.<br>Haz un pedido y pulsa "Guardar como pedido fijo".</div>';
+  } else {
+    el.innerHTML=names.map(n=>`
+      <div class="modal-item" onclick="loadFromModal('${esc(n)}')">
+        <div>
+          <div class="modal-item-name">👤 ${esc(n)}</div>
+          <div class="modal-item-count">${fixedOrders[n].length} productos</div>
+        </div>
+        <span style="color:var(--blue);font-size:.8rem;font-weight:700;">Cargar →</span>
+      </div>
+    `).join('');
+  }
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function loadFromModal(name){
+  document.getElementById('clientName').value=name;
+  closeModalDirect();
+  checkFixed();
+  applyFixed();
+}
+
+function closeModal(e){
+  if(e.target===document.getElementById('modalOverlay')) closeModalDirect();
+}
+function closeModalDirect(){
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+function saveFixed(){
+  const name=document.getElementById('clientName').value.trim();
+  if(!name){alert('Escribe el nombre del cliente primero.');return;}
+  const items=getItems();
+  if(!items.length){alert('Selecciona al menos un producto.');return;}
+  fixedOrders[name]=items;
+  localStorage.setItem(K_FIXED,JSON.stringify(fixedOrders));
+  showToast(`💾 Pedido fijo de ${name} guardado.`,'ok');
+  setTimeout(()=>{ document.getElementById('toast').className='toast'; },3000);
+}
+
+async function confirmOrder(){
+  const name=document.getElementById('clientName').value.trim();
+  if(!name){alert('Escribe el nombre del cliente.');return;}
+  const items=getItems();
+  if(!items.length){alert('Selecciona al menos un producto.');return;}
+  document.getElementById('confirmBtn').disabled=true;
+  showToast('⏳ Enviando…','loading');
+  orders.push({id:Date.now(),client:name,items,
+    time:new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})});
+  saveOrders();
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({client:name,items})});
+    showToast(`✅ Pedido de ${name} enviado.`,'ok');
+  }catch{showToast('⚠️ Guardado localmente.','ok');}
+  document.getElementById('clientName').value='';
+  document.getElementById('fixedBanner').classList.remove('show');
+  renderCatalog();
+  document.getElementById('confirmBtn').disabled=false;
+  setTimeout(()=>{ document.getElementById('toast').className='toast'; },4000);
+}
+
+function showToast(m,t){const el=document.getElementById('toast');el.textContent=m;el.className='toast '+t;}
+
+function renderSummary(){
+  const el=document.getElementById('summaryContainer');
+  if(!orders.length){el.innerHTML='<div class="empty">Sin pedidos aún.</div>';return;}
+  const tot={};
+  orders.forEach(o=>o.items.forEach(it=>{tot[it.name]=(tot[it.name]||0)+it.qty;}));
+  el.innerHTML=CATALOG.map(sec=>`
+    <div class="sum-section">
+      <div class="sum-head ${sec.cls}">${sec.label}</div>
+      <div class="sum-grid">
+        ${sec.products.map(p=>{
+          const q=tot[p]||0;
+          return `<div class="sum-row">
+            <span class="sum-name">${esc(p)}</span>
+            <span class="sum-qty ${q===0?'zero':''}">${q}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderOrders(){
+  const el=document.getElementById('ordersList');
+  el.innerHTML=orders.length?[...orders].reverse().map(o=>`
+    <div class="order-card">
+      <div class="order-client">👤 ${esc(o.client)}</div>
+      <div class="order-chips">${o.items.map(it=>`<span class="chip">${it.qty} ${esc(it.name)}</span>`).join('')}</div>
+      <div class="order-time">🕐 ${o.time}</div>
+      <button class="odel" onclick="delOrder(${o.id})">✕</button>
+    </div>
+  `).join(''):'<div class="empty">Sin pedidos aún.</div>';
+}
+
+function delOrder(id){orders=orders.filter(o=>o.id!==id);saveOrders();renderOrders();}
+function clearAll(){if(!confirm('¿Borrar todos los pedidos del día?'))return;orders=[];saveOrders();renderOrders();}
+
+function resetDay(){
+  if(!confirm('¿Resetear todos los pedidos del día? Los pedidos fijos no se borrarán.'))return;
+  orders=[];saveOrders();
+  document.getElementById('dayInfo').textContent='✅ Reseteado el '+new Date().toLocaleString('es-ES');
+  renderReset();
+}
+
+function renderReset(){
+  document.getElementById('dayInfo').textContent=orders.length
+    ?`Hoy hay ${orders.length} pedido(s) registrado(s).`
+    :'No hay pedidos hoy todavía.';
+  const el=document.getElementById('fixedList');
+  const names=Object.keys(fixedOrders);
+  el.innerHTML=names.length?names.map(n=>`
+    <div class="fixed-card">
+      <div>
+        <div class="fixed-name">👤 ${esc(n)}</div>
+        <div style="font-size:.72rem;color:#60A5FA;margin-top:.2rem">${fixedOrders[n].length} producto(s)</div>
+      </div>
+      <button class="fixed-del" onclick="deleteFixed('${esc(n)}')">✕ Borrar</button>
+    </div>
+  `).join(''):'<div class="empty">No hay pedidos fijos guardados.</div>';
+}
+
+function deleteFixed(name){
+  if(!confirm(`¿Borrar el pedido fijo de ${name}?`))return;
+  delete fixedOrders[name];
+  localStorage.setItem(K_FIXED,JSON.stringify(fixedOrders));
+  renderReset();
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('hdate').textContent=
+    new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+  load();renderCatalog();
+});
+</script>
+</body>
+</html>
