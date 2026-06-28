@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panadería · Panadero</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#FAF6EF;--wheat:#E8D9B8;--crust:#B5722A;--dark:#2A1F0E;
+  --mid:#7A5C2E;--soft:#F3EAD8;--border:#DDD0B3;--green:#3A7D52;
+  --red:#C0392B;--shadow:0 2px 10px rgba(42,31,14,.09);--blue:#2563EB;
+}
+body{background:var(--cream);font-family:'Inter',sans-serif;color:var(--dark);min-height:100vh;}
+
+/* LOGIN */
+.login-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--dark);display:flex;align-items:center;justify-content:center;z-index:999;flex-direction:column;gap:1rem;padding:2rem;}
+.login-screen.hidden{display:none;}
+.login-logo{font-family:'Playfair Display',serif;font-size:2rem;color:var(--wheat);}
+.login-logo em{color:var(--crust);font-style:normal;}
+.login-box{background:#fff;border-radius:14px;padding:1.5rem;width:100%;max-width:320px;box-shadow:var(--shadow);}
+.login-box label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--mid);display:block;margin-bottom:.4rem;}
+.login-box input{width:100%;padding:.65rem .9rem;border:1.5px solid var(--border);border-radius:8px;font-size:.95rem;background:var(--soft);outline:none;margin-bottom:.8rem;}
+.login-box input:focus{border-color:var(--crust);}
+.btn-login{width:100%;padding:.75rem;background:var(--crust);color:#fff;border:none;border-radius:8px;font-size:.95rem;font-weight:700;cursor:pointer;}
+.login-err{color:var(--red);font-size:.8rem;text-align:center;margin-top:.4rem;display:none;}
+.login-err.show{display:block;}
+
+header{background:var(--dark);padding:.9rem 1.2rem;display:flex;align-items:center;gap:.8rem;}
+.logo{font-family:'Playfair Display',serif;font-size:1.35rem;color:var(--wheat);}
+.logo em{color:var(--crust);font-style:normal;}
+.hdate{margin-left:auto;font-size:.7rem;color:var(--wheat);opacity:.5;text-transform:uppercase;letter-spacing:.07em;}
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--border);overflow-x:auto;}
+.tab{padding:.75rem 1rem;font-size:.83rem;font-weight:600;color:var(--mid);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color .2s,border-color .2s;user-select:none;}
+.tab.active{color:var(--crust);border-color:var(--crust);}
+.view{display:none;padding:.9rem;max-width:860px;margin:0 auto;}
+.view.active{display:block;}
+
+/* SUMMARY */
+.sum-section{background:#fff;border:1px solid var(--border);border-radius:11px;margin-bottom:.75rem;box-shadow:var(--shadow);overflow:hidden;}
+.sum-head{padding:.5rem 1rem;font-size:.78rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#fff;}
+.s1{background:#6B3A1F;}.s2{background:#2E5C3E;}.s3{background:#3D3424;}.s4{background:#3A5C1F;}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;}
+.sum-row{display:flex;align-items:center;justify-content:space-between;padding:.4rem .75rem;border-bottom:1px solid var(--border);border-right:1px solid var(--border);}
+.sum-name{font-size:.78rem;font-weight:600;color:var(--dark);}
+.sum-qty{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:900;color:var(--crust);}
+.sum-qty.zero{color:#ddd;}
+
+/* ORDERS */
+.order-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:.8rem .95rem;margin-bottom:.65rem;box-shadow:var(--shadow);position:relative;}
+.order-client{font-weight:700;font-size:.9rem;color:var(--dark);margin-bottom:.38rem;}
+.order-chips{display:flex;flex-wrap:wrap;gap:.28rem;}
+.chip{background:var(--soft);border:1px solid var(--border);border-radius:5px;padding:.13rem .45rem;font-size:.74rem;color:var(--mid);}
+.order-time{font-size:.66rem;color:#bbb;margin-top:.32rem;}
+.odel{position:absolute;top:.65rem;right:.65rem;background:none;border:none;font-size:.88rem;cursor:pointer;color:#ccc;}
+.odel:hover{color:var(--red);}
+.sec-hdr{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--dark);margin-bottom:.75rem;display:flex;align-items:center;justify-content:space-between;}
+.clr-btn{background:none;border:1.5px solid var(--border);color:var(--mid);border-radius:7px;padding:.3rem .75rem;font-size:.76rem;cursor:pointer;}
+.clr-btn:hover{border-color:var(--red);color:var(--red);}
+
+/* FIXED ORDERS */
+.name-box{background:#fff;border:1px solid var(--border);border-radius:11px;padding:.9rem;margin-bottom:.9rem;box-shadow:var(--shadow);}
+.name-box label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--crust);display:block;margin-bottom:.35rem;}
+.name-box input{width:100%;padding:.6rem .9rem;border:1.5px solid var(--border);border-radius:7px;font-size:.93rem;background:var(--soft);color:var(--dark);outline:none;}
+.name-box input:focus{border-color:var(--crust);background:#fff;}
+.fixed-card{background:#EFF6FF;border:1px solid #BFDBFE;border-radius:9px;padding:.7rem .9rem;margin-bottom:.5rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem;}
+.fixed-name{font-weight:700;font-size:.88rem;color:var(--dark);}
+.fixed-del{background:none;border:none;color:#93C5FD;cursor:pointer;font-size:.85rem;padding:.2rem .5rem;}
+.fixed-del:hover{color:var(--red);}
+.hint{font-size:.73rem;color:var(--mid);margin-bottom:.6rem;}
+
+/* RESET */
+.reset-box{background:#fff;border:1px solid var(--border);border-radius:11px;padding:1.2rem;margin-bottom:1rem;box-shadow:var(--shadow);text-align:center;}
+.reset-box p{font-size:.82rem;color:var(--mid);margin-bottom:.8rem;line-height:1.6;}
+.btn-reset{padding:.75rem 1.6rem;background:var(--red);color:#fff;border:none;border-radius:8px;font-size:.9rem;font-weight:700;cursor:pointer;}
+.day-info{font-size:.75rem;color:#aaa;margin-top:.6rem;}
+
+.empty{text-align:center;color:#bbb;font-size:.83rem;padding:1.6rem 0;}
+.badge-green{display:inline-flex;align-items:center;gap:.35rem;background:#E8F5E9;border:1px solid #A5D6A7;border-radius:5px;padding:.25rem .6rem;font-size:.71rem;color:#2E7D32;font-weight:600;margin-bottom:.8rem;}
+
+/* ADD FIXED */
+.add-fixed-box{background:#fff;border:1px solid var(--border);border-radius:11px;padding:.9rem;margin-bottom:.9rem;box-shadow:var(--shadow);}
+.add-fixed-box h3{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--crust);margin-bottom:.6rem;}
+.add-row{display:flex;gap:.5rem;flex-wrap:wrap;}
+.add-row input{flex:1;min-width:120px;padding:.55rem .8rem;border:1.5px solid var(--border);border-radius:7px;font-size:.88rem;background:var(--soft);outline:none;}
+.add-row input:focus{border-color:var(--crust);background:#fff;}
+.btn-add{padding:.55rem 1rem;background:var(--green);color:#fff;border:none;border-radius:7px;font-size:.82rem;font-weight:700;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-logo">🍞 Mi <em>Panadería</em></div>
+  <div class="login-box">
+    <label>Contraseña</label>
+    <input type="password" id="pwInput" placeholder="Escribe tu contraseña…" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-login" onclick="doLogin()">Entrar</button>
+    <div class="login-err" id="loginErr">Contraseña incorrecta</div>
+  </div>
+</div>
+
+<header>
+  <div class="logo">🍞 Mi <em>Panadería</em> <span style="font-size:.7rem;color:var(--crust);margin-left:.5rem;">· Panadero</span></div>
+  <div class="hdate" id="hdate"></div>
+</header>
+<div class="tabs">
+  <div class="tab active" onclick="showTab('summary')">🏭 Resumen</div>
+  <div class="tab" onclick="showTab('orders')">👤 Clientes</div>
+  <div class="tab" onclick="showTab('fixed')">📋 Fijos</div>
+  <div class="tab" onclick="showTab('reset')">🔄 Resetear</div>
+</div>
+
+<!-- RESUMEN -->
+<div class="view active" id="view-summary">
+  <div class="badge-green">🟢 Pedidos del día</div>
+  <div id="summaryContainer"><div class="empty">Sin pedidos aún.</div></div>
+</div>
+
+<!-- POR CLIENTE -->
+<div class="view" id="view-orders">
+  <div class="sec-hdr">
+    <span>Pedidos individuales</span>
+    <button class="clr-btn" onclick="clearAll()">Borrar todo</button>
+  </div>
+  <div id="ordersList"><div class="empty">Sin pedidos aún.</div></div>
+</div>
+
+<!-- PEDIDOS FIJOS -->
+<div class="view" id="view-fixed">
+  <div class="add-fixed-box">
+    <h3>Añadir cliente con pedido fijo</h3>
+    <div class="hint">Escribe el nombre del cliente. Cuando el cliente haga su primer pedido, podrás guardarlo como fijo.</div>
+    <div class="add-row">
+      <input type="text" id="newFixedName" placeholder="Nombre del cliente…" maxlength="60">
+      <button class="btn-add" onclick="addFixedClient()">+ Añadir</button>
+    </div>
+  </div>
+  <div class="sec-hdr"><span>Clientes con pedido fijo</span></div>
+  <div id="fixedList"><div class="empty">No hay pedidos fijos aún.</div></div>
+</div>
+
+<!-- RESETEAR -->
+<div class="view" id="view-reset">
+  <div class="reset-box">
+    <p>Pulsa este botón al <strong>inicio de cada día</strong> para borrar todos los pedidos y empezar de cero.<br><br>Los <strong>pedidos fijos</strong> de los clientes <strong>no se borran</strong>.</p>
+    <button class="btn-reset" onclick="resetDay()">🗑 Resetear pedidos del día</button>
+    <div class="day-info" id="dayInfo"></div>
+  </div>
+</div>
+
+<script>
+const PASS = 'sergioyrosa22';
+const K_ORDERS = 'pan_orders_v8';
+const K_FIXED  = 'pan_fixed_v8';
+const K_DATE   = 'pan_date_v8';
+const K_AUTH   = 'pan_auth_v8';
+
+const CATALOG=[
+  {id:'s1',label:'Masa Dura',cls:'s1',products:['Kilos Blancos','Kilos Blancos Cortado','Medios Blancos','Medios Blancos Cortado','Cuartos Blancos','Cuartos Blancos Cortado','Kilos Boba','Kilos Boba Cortado','Medios Boba','Medios Boba Cortado','Cuartos Boba','Cuartos Boba Cortado','Medios Piña','Medios Tabla','Cuartos Piña','Cuartos Tabla','Bollos Masa Dura','Bollos Piña','Bollitos Masa Dura','Bollitos Piña']},
+  {id:'s2',label:'Masa Viena',cls:'s2',products:['Barras','Barra Manteca','Barras Rústica','Medias Barritas','Medias Barritas Rústica','Kilos Rústico','Medios Rústico','Cuartos Rústico','Bollitos Rústico','Molletes Rústico','Bollos Viena','Mini Cocido','Pitufos','Salchichas','Mini Blanco','Molletes Blancos','Molletes Cocidos','Terraza Blanco','Montadito','Montadito Redondo','Hamburguesa','Estrellitas']},
+  {id:'s3',label:'Moreno',cls:'s3',products:['Telera 3 Kilos Moreno','Telera 3 Kilos Moreno Cortado','Telera 2 Kilos Moreno','Telera 2 Kilos Moreno Cortado','Kilos Morenos','Kilos Morenos Cortado','Medios Morenos','Medios Morenos Cortado']},
+  {id:'s4',label:'Integral',cls:'s4',products:['Kilos Int.','Kilos Int. Cortado','Medios Int.','Medios Int. Cortado','Cuartos Int.','Cuartos Int. Cortado','Medias Barritas Int.','Bollos Int.','Minis Int.','Minis Blando Int.','Molletes Integrales','Terraza Int.']},
+];
+
+let orders=[];
+let fixedOrders={};
+
+function doLogin(){
+  const pw=document.getElementById('pwInput').value;
+  if(pw===PASS){
+    localStorage.setItem(K_AUTH,'1');
+    document.getElementById('loginScreen').classList.add('hidden');
+    init();
+  } else {
+    document.getElementById('loginErr').classList.add('show');
+    document.getElementById('pwInput').value='';
+  }
+}
+
+function checkAuth(){
+  if(localStorage.getItem(K_AUTH)==='1'){
+    document.getElementById('loginScreen').classList.add('hidden');
+    init();
+  }
+}
+
+function init(){
+  try{ orders=JSON.parse(localStorage.getItem(K_ORDERS))||[]; }catch{ orders=[]; }
+  try{ fixedOrders=JSON.parse(localStorage.getItem(K_FIXED))||{}; }catch{ fixedOrders={}; }
+  const today=new Date().toDateString();
+  const lastDate=localStorage.getItem(K_DATE);
+  if(lastDate && lastDate!==today){ orders=[]; localStorage.setItem(K_ORDERS,JSON.stringify(orders)); }
+  localStorage.setItem(K_DATE,today);
+  document.getElementById('hdate').textContent=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+  renderSummary();
+}
+
+function showTab(t){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.getElementById('view-'+t).classList.add('active');
+  ['summary','orders','fixed','reset'].forEach((n,i)=>{if(n===t)document.querySelectorAll('.tab')[i].classList.add('active');});
+  if(t==='summary') renderSummary();
+  if(t==='orders') renderOrders();
+  if(t==='fixed') renderFixed();
+  if(t==='reset') renderReset();
+}
+
+function renderSummary(){
+  const el=document.getElementById('summaryContainer');
+  if(!orders.length){el.innerHTML='<div class="empty">Sin pedidos aún.</div>';return;}
+  const tot={};
+  orders.forEach(o=>o.items.forEach(it=>{tot[it.name]=(tot[it.name]||0)+it.qty;}));
+  el.innerHTML=CATALOG.map(sec=>`
+    <div class="sum-section">
+      <div class="sum-head ${sec.cls}">${sec.label}</div>
+      <div class="sum-grid">
+        ${sec.products.map(p=>{const q=tot[p]||0;return`<div class="sum-row"><span class="sum-name">${esc(p)}</span><span class="sum-qty ${q===0?'zero':''}">${q}</span></div>`;}).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function renderOrders(){
+  const el=document.getElementById('ordersList');
+  el.innerHTML=orders.length?[...orders].reverse().map(o=>`
+    <div class="order-card">
+      <div class="order-client">👤 ${esc(o.client)}</div>
+      <div class="order-chips">${o.items.map(it=>`<span class="chip">${it.qty} ${esc(it.name)}</span>`).join('')}</div>
+      <div class="order-time">🕐 ${o.time}</div>
+      <button class="odel" onclick="delOrder(${o.id})">✕</button>
+    </div>`).join(''):'<div class="empty">Sin pedidos aún.</div>';
+}
+
+function delOrder(id){orders=orders.filter(o=>o.id!==id);localStorage.setItem(K_ORDERS,JSON.stringify(orders));renderOrders();}
+function clearAll(){if(!confirm('¿Borrar todos los pedidos?'))return;orders=[];localStorage.setItem(K_ORDERS,JSON.stringify(orders));renderOrders();}
+
+function renderFixed(){
+  const el=document.getElementById('fixedList');
+  const names=Object.keys(fixedOrders);
+  el.innerHTML=names.length?names.map(n=>`
+    <div class="fixed-card">
+      <div>
+        <div class="fixed-name">👤 ${esc(n)}</div>
+        <div style="font-size:.72rem;color:#60A5FA;margin-top:.2rem">${fixedOrders[n].length} producto(s)</div>
+      </div>
+      <button class="fixed-del" onclick="deleteFixed('${esc(n)}')">✕ Borrar</button>
+    </div>`).join(''):'<div class="empty">No hay pedidos fijos aún.</div>';
+}
+
+function addFixedClient(){
+  const name=document.getElementById('newFixedName').value.trim();
+  if(!name){alert('Escribe el nombre del cliente.');return;}
+  if(fixedOrders[name]){alert('Este cliente ya tiene pedido fijo.');return;}
+  fixedOrders[name]=[];
+  localStorage.setItem(K_FIXED,JSON.stringify(fixedOrders));
+  document.getElementById('newFixedName').value='';
+  renderFixed();
+}
+
+function deleteFixed(name){
+  if(!confirm(`¿Borrar el pedido fijo de ${name}?`))return;
+  delete fixedOrders[name];
+  localStorage.setItem(K_FIXED,JSON.stringify(fixedOrders));
+  renderFixed();
+}
+
+function resetDay(){
+  if(!confirm('¿Resetear todos los pedidos del día?'))return;
+  orders=[];localStorage.setItem(K_ORDERS,JSON.stringify(orders));
+  document.getElementById('dayInfo').textContent='✅ Reseteado el '+new Date().toLocaleString('es-ES');
+  renderReset();
+}
+
+function renderReset(){
+  document.getElementById('dayInfo').textContent=orders.length
+    ?`Hoy hay ${orders.length} pedido(s) registrado(s).`
+    :'No hay pedidos hoy todavía.';
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+document.addEventListener('DOMContentLoaded',()=>{ checkAuth(); });
+</script>
+</body>
+</html>
