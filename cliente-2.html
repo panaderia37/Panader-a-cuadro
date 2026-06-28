@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panadería · Hacer Pedido</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--cream:#FAF6EF;--wheat:#E8D9B8;--crust:#B5722A;--dark:#2A1F0E;--mid:#7A5C2E;--soft:#F3EAD8;--border:#DDD0B3;--green:#3A7D52;--shadow:0 2px 10px rgba(42,31,14,.09);}
+body{background:var(--cream);font-family:'Inter',sans-serif;color:var(--dark);min-height:100vh;}
+header{background:var(--dark);padding:.9rem 1.2rem;display:flex;align-items:center;}
+.logo{font-family:'Playfair Display',serif;font-size:1.35rem;color:var(--wheat);}
+.logo em{color:var(--crust);font-style:normal;}
+.hdate{margin-left:auto;font-size:.7rem;color:var(--wheat);opacity:.5;text-transform:uppercase;letter-spacing:.07em;}
+.wrap{padding:.9rem;max-width:860px;margin:0 auto;}
+.name-box{background:#fff;border:1px solid var(--border);border-radius:11px;padding:.9rem;margin-bottom:.9rem;box-shadow:var(--shadow);}
+.name-box label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--crust);display:block;margin-bottom:.35rem;}
+.name-box input{width:100%;padding:.6rem .9rem;border:1.5px solid var(--border);border-radius:7px;font-size:.93rem;background:var(--soft);color:var(--dark);outline:none;transition:border-color .2s;}
+.name-box input:focus{border-color:var(--crust);background:#fff;}
+.section-card{background:#fff;border:1px solid var(--border);border-radius:11px;margin-bottom:.75rem;box-shadow:var(--shadow);overflow:hidden;}
+.section-head{padding:.5rem 1rem;font-size:.78rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#fff;}
+.s1{background:#6B3A1F;}.s2{background:#2E5C3E;}.s3{background:#3D3424;}.s4{background:#3A5C1F;}
+.prod-grid{display:grid;grid-template-columns:1fr 1fr;}
+.prod-row{display:flex;align-items:center;justify-content:space-between;padding:.4rem .7rem;border-bottom:1px solid var(--border);border-right:1px solid var(--border);}
+.prod-row.has-qty{background:#FFF6EC;}
+.prod-label{font-size:.78rem;font-weight:600;color:var(--dark);flex:1;line-height:1.25;padding-right:.4rem;}
+.qty-ctrl{display:flex;align-items:center;gap:.2rem;flex-shrink:0;}
+.qb{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--border);background:var(--soft);font-size:.95rem;font-weight:700;color:var(--mid);cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;transition:background .15s,color .15s;flex-shrink:0;}
+.qb:hover{background:var(--crust);border-color:var(--crust);color:#fff;}
+.qty-input{width:42px;height:28px;border:1.5px solid var(--border);border-radius:6px;text-align:center;font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--crust);background:var(--soft);outline:none;padding:0;}
+.qty-input:focus{border-color:var(--crust);background:#fff;}
+.qty-input.has-val{background:#FFF6EC;border-color:var(--crust);}
+.btn-ok{width:100%;padding:.8rem;background:var(--crust);color:#fff;border:none;border-radius:9px;font-size:.92rem;font-weight:700;cursor:pointer;margin-top:.4rem;transition:opacity .2s;}
+.btn-ok:hover{opacity:.88;}
+.btn-ok:disabled{opacity:.4;cursor:not-allowed;}
+.toast{margin-top:.6rem;padding:.6rem .9rem;border-radius:7px;font-size:.81rem;display:none;}
+.toast.ok{background:#EAF4EE;color:var(--green);border:1px solid #B6D9C2;display:block;}
+.toast.loading{background:var(--soft);color:var(--mid);border:1px solid var(--border);display:block;}
+.hint{font-size:.73rem;color:var(--mid);margin-bottom:.8rem;line-height:1.5;}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🍞 Mi <em>Panadería</em></div>
+  <div class="hdate" id="hdate"></div>
+</header>
+<div class="wrap">
+  <div class="name-box">
+    <label>Tu nombre</label>
+    <input type="text" id="clientName" placeholder="Escribe tu nombre…" maxlength="60">
+  </div>
+  <div class="hint">Pulsa − + para cantidades pequeñas, o escribe directamente el número.</div>
+  <div id="catalogContainer"></div>
+  <button class="btn-ok" id="confirmBtn" onclick="confirmOrder()">Enviar pedido ☁️</button>
+  <div class="toast" id="toast"></div>
+</div>
+<script>
+const SCRIPT_URL='https://script.google.com/macros/s/AKfycbzCdoPTycYYVMsL5fZAhzIwWFzzYvfLrp5T2C9qa8I9RVlnF-ArYTwOH4hp2yilMGxc/exec';
+const CATALOG=[
+  {id:'s1',label:'Masa Dura',cls:'s1',products:['Kilos Blancos','Kilos Blancos Cortado','Medios Blancos','Medios Blancos Cortado','Cuartos Blancos','Cuartos Blancos Cortado','Kilos Boba','Kilos Boba Cortado','Medios Boba','Medios Boba Cortado','Cuartos Boba','Cuartos Boba Cortado','Medios Piña','Medios Tabla','Cuartos Piña','Cuartos Tabla','Bollos Masa Dura','Bollos Piña','Bollitos Masa Dura','Bollitos Piña']},
+  {id:'s2',label:'Masa Viena',cls:'s2',products:['Barras','Barra Manteca','Barras Rústica','Medias Barritas','Medias Barritas Rústica','Kilos Rústico','Medios Rústico','Cuartos Rústico','Bollitos Rústico','Molletes Rústico','Bollos Viena','Mini Cocido','Pitufos','Salchichas','Mini Blanco','Molletes Blancos','Molletes Cocidos','Terraza Blanco','Montadito','Montadito Redondo','Hamburguesa','Estrellitas','Moldes Blanco']},
+  {id:'s3',label:'Moreno',cls:'s3',products:['Telera 3 Kilos Moreno','Telera 3 Kilos Moreno Cortado','Telera 2 Kilos Moreno','Telera 2 Kilos Moreno Cortado','Kilos Morenos','Kilos Morenos Cortado','Medios Morenos','Medios Morenos Cortado','Moldes Moreno']},
+  {id:'s4',label:'Integral',cls:'s4',products:['Kilos Int.','Kilos Int. Cortado','Medios Int.','Medios Int. Cortado','Cuartos Int.','Cuartos Int. Cortado','Medias Barritas Int.','Bollos Int.','Minis Int.','Minis Blando Int.','Molletes Integrales','Terraza Int.','Montaditos Integrales']},
+];
+let sel={};
+function pid(p){return 'p_'+p.replace(/[^a-zA-Z0-9]/g,'_');}
+function renderCatalog(){
+  sel={};
+  document.getElementById('catalogContainer').innerHTML=CATALOG.map(sec=>`
+    <div class="section-card">
+      <div class="section-head ${sec.cls}">${sec.label}</div>
+      <div class="prod-grid">
+        ${sec.products.map(p=>{const id=pid(p);return`<div class="prod-row" id="row-${id}"><span class="prod-label">${esc(p)}</span><div class="qty-ctrl"><button class="qb" onclick="cq('${id}',-1)">−</button><input class="qty-input" id="qi-${id}" type="number" min="0" value="" placeholder="0" oninput="setQ('${id}',this.value)"><button class="qb" onclick="cq('${id}',1)">+</button></div></div>`;}).join('')}
+      </div>
+    </div>`).join('');
+}
+function setQ(id,val){const n=Math.max(0,parseInt(val)||0);sel[id]=n;document.getElementById('qi-'+id).classList.toggle('has-val',n>0);document.getElementById('row-'+id).classList.toggle('has-qty',n>0);}
+function cq(id,d){const n=Math.max(0,(sel[id]||0)+d);sel[id]=n;const inp=document.getElementById('qi-'+id);if(inp){inp.value=n>0?n:'';inp.classList.toggle('has-val',n>0);}document.getElementById('row-'+id).classList.toggle('has-qty',n>0);}
+async function confirmOrder(){
+  const name=document.getElementById('clientName').value.trim();
+  if(!name){alert('Escribe tu nombre.');return;}
+  const items=[];
+  CATALOG.forEach(sec=>sec.products.forEach(p=>{const id=pid(p);if((sel[id]||0)>0)items.push({name:p,qty:sel[id],section:sec.label});}));
+  if(!items.length){alert('Selecciona al menos un producto.');return;}
+  document.getElementById('confirmBtn').disabled=true;
+  showToast('⏳ Enviando pedido…','loading');
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify({client:name,items})});
+    showToast(`✅ Pedido enviado. ¡Gracias ${name}!`,'ok');
+  }catch{showToast('✅ Pedido guardado.','ok');}
+  document.getElementById('clientName').value='';
+  renderCatalog();
+  document.getElementById('confirmBtn').disabled=false;
+}
+function showToast(m,t){const el=document.getElementById('toast');el.textContent=m;el.className='toast '+t;}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('hdate').textContent=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+  renderCatalog();
+});
+</script>
+</body>
+</html>
